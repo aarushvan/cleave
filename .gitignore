@@ -1,0 +1,11 @@
+# Compiled binary and test binaries
+/cleave
+*.test
+
+# Temporary and coverage artifacts
+tmp/
+*.out
+coverage.txt
+
+# OS files
+.DS_Store
