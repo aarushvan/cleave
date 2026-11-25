@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-var version = "v0.1.0"
+var version = "v0.1.1"
 
 const usage = "Usage:\n" +
 	"  cleave diff <old> <new> [--mode ast|line] [--json] [--no-color]\n" +

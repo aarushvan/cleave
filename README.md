@@ -1,4 +1,4 @@
-# cleave v0.1.0
+# cleave v0.1.1
 
 Cleave is a move-aware, single-file diff and three-way merge CLI. It builds
 with Go 1.22 or later and uses only the standard library.
@@ -11,7 +11,7 @@ CGO_ENABLED=0 go build -ldflags="-s -w" -o cleave .
 go test ./...
 ```
 
-Pass `-X main.version=v0.1.0` inside the linker flags to set the reported version.
+Pass `-X main.version=v0.1.1` inside the linker flags to set the reported version.
 
 ## Diff
 

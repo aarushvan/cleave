@@ -95,15 +95,38 @@ func parseGo(text string) ([]Block, error) {
 	}
 	s := newSource(text)
 	offset := func(p token.Pos) int { return fset.PositionFor(p, false).Offset }
+	// Older Go parsers may put a leading line directive in a separate comment
+	// group. Keep adjacent directives with their declaration on every Go version.
+	directives := make(map[int]int)
+	for _, group := range file.Comments {
+		for _, comment := range group.List {
+			start := offset(comment.Pos())
+			line := s.line(start)
+			if strings.HasPrefix(comment.Text, "//line ") && start == s.lines[line-1] {
+				directives[line] = start
+			}
+		}
+	}
+	declarationStart := func(pos token.Pos, doc *ast.CommentGroup) int {
+		if doc != nil {
+			pos = doc.Pos()
+		}
+		start := offset(pos)
+		for line := s.line(start) - 1; line > 0; line-- {
+			directive, ok := directives[line]
+			if !ok {
+				break
+			}
+			start = directive
+		}
+		return start
+	}
 	var out []Block
 	for _, decl := range file.Decls {
 		switch d := decl.(type) {
 		case *ast.FuncDecl:
-			start, head, stop := offset(d.Pos()), offset(d.Pos()), offset(d.End())
+			start, head, stop := declarationStart(d.Pos(), d.Doc), offset(d.Pos()), offset(d.End())
 			signatureEnd := stop
-			if d.Doc != nil {
-				start = offset(d.Doc.Pos())
-			}
 			if d.Body != nil {
 				signatureEnd = offset(d.Body.Pos())
 			}
@@ -118,10 +141,7 @@ func parseGo(text string) ([]Block, error) {
 			if d.Tok != token.TYPE {
 				continue
 			}
-			start, head, stop := offset(d.Pos()), offset(d.Pos()), offset(d.End())
-			if d.Doc != nil {
-				start = offset(d.Doc.Pos())
-			}
+			start, head, stop := declarationStart(d.Pos(), d.Doc), offset(d.Pos()), offset(d.End())
 			var names []string
 			for _, spec := range d.Specs {
 				names = append(names, spec.(*ast.TypeSpec).Name.Name)
